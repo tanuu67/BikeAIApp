@@ -20,9 +20,6 @@ export default function App() {
   const [message, setMessage] = useState('');
   const flatRef = useRef();
 
-  // 🔑 APNI API KEY YAHAN DAALEIN
-  const API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
-
   useEffect(() => {
     Animated.spring(scaleAnim, {
       toValue: 1,
@@ -43,48 +40,25 @@ export default function App() {
   const bikeData = [
     { q: "ktm rc 350", a: "KTM RC 350 expected April 2026, ₹2.9–3 lakh 🏁" },
     { q: "bullet 650", a: "RE Bullet 650 expected June 2026 🆕" },
-    { q: "norton v4", a: "Norton V4 superbike ₹25–30 lakh 💎" }
+    { q: "norton v4", a: "Norton V4 superbike ₹25–30 lakh 💎" },
+    { q: "mileage", a: "Mileage tank-to-tank method se check karo ⛽" },
+    { q: "helmet", a: "ECE ya DOT helmet sabse safe hota hai 🪖" }
   ];
 
-  const getAIAnswer = async (msg) => {
+  const getAnswer = (msg) => {
     const text = msg.toLowerCase();
-    
-    // Check Local Data First
+
     for (let item of bikeData) {
       if (text.includes(item.q)) return item.a;
     }
 
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `You are a professional motorcycle expert. Provide a very concise, luxury-toned answer in Hinglish to: ${msg}` }] }]
-          })
-        }
-      );
-      
-      const data = await response.json();
+    if (text.includes("bike")) return "Kaunsi bike ke baare me jana chahte ho? 😎";
+    if (text.includes("hi") || text.includes("hello")) return "Welcome Rider 👋";
 
-      // 🔥 FIXED: Check if candidates exist before accessing
-      if (data && data.candidates && data.candidates[0] && data.candidates[0].content) {
-        return data.candidates[0].content.parts[0].text;
-      } else if (data.error) {
-        console.log("API Error Log:", data.error.message);
-        return "System update in progress. Please try again later. 🛠️";
-      }
-      
-      return "I'm processing your request. Please rephrase. 🏍️";
-
-    } catch (error) {
-      console.log("Network Error:", error);
-      return "Check your connection, Rider. The garage is offline. 🌐";
-    }
+    return "Interesting question 🤔 thoda aur detail do!";
   };
 
-  const send = async () => {
+  const send = () => {
     if (!message.trim() || loading) return;
 
     const userMsg = message;
@@ -94,11 +68,12 @@ export default function App() {
     setChat(prev => [...prev, { id: Date.now().toString(), text: userMsg, sender: 'user' }]);
     setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
 
-    const reply = await getAIAnswer(userMsg);
-    
-    setChat(prev => [...prev, { id: Date.now().toString(), text: reply, sender: 'ai' }]);
-    setLoading(false);
-    setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 200);
+    setTimeout(() => {
+      const reply = getAnswer(userMsg);
+      setChat(prev => [...prev, { id: Date.now().toString(), text: reply, sender: 'ai' }]);
+      setLoading(false);
+      setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 200);
+    }, 400);
   };
 
   if (showSplash) {
@@ -158,7 +133,9 @@ export default function App() {
             onPress={send}
             disabled={loading}
           >
-            {loading ? <ActivityIndicator color="#000" size="small" /> : <Text style={styles.btnText}>SEND</Text>}
+            {loading 
+              ? <ActivityIndicator color="#000" size="small" /> 
+              : <Text style={styles.btnText}>SEND</Text>}
           </TouchableOpacity>
         </View>
       </View>
